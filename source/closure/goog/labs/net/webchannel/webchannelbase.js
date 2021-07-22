@@ -777,7 +777,12 @@ WebChannelBase.prototype.runOriginTrials_ = function(channelPath) {
   'use strict';
 
   try {
-    environment.startOriginTrials(channelPath);
+    // Since startOriginTrials might throw exceptions asynchronously, we should
+    // capture it in promise-catch.
+    environment.startOriginTrials(channelPath, e => {
+      this.channelDebug_.dumpException(
+          /** @type {?Error} */ (e), 'Error in running origin trials');
+    });
     this.channelDebug_.info('Origin Trials invoked: ' + channelPath);
   } catch (e) {
     this.channelDebug_.dumpException(e, 'Error in running origin trials');
@@ -2240,7 +2245,7 @@ WebChannelBase.prototype.onInput_ = function(respArray, request) {
       }
     } else if (this.state_ == WebChannelBase.State.OPENED) {
       if (nextArray[0] == 'stop' || nextArray[0] == 'close') {
-        if (batch && !goog.array.isEmpty(batch)) {
+        if (batch && !(batch.length === 0)) {
           this.handler_.channelHandleMultipleArrays(this, batch);
           batch.length = 0;
         }
@@ -2267,7 +2272,7 @@ WebChannelBase.prototype.onInput_ = function(respArray, request) {
       this.backChannelRetryCount_ = 0;
     }
   }
-  if (batch && !goog.array.isEmpty(batch)) {
+  if (batch && !(batch.length === 0)) {
     this.handler_.channelHandleMultipleArrays(this, batch);
   }
 };

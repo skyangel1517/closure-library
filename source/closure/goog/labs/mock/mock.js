@@ -183,7 +183,7 @@ goog.labs.mock.getFunctionName_ = function(func) {
 goog.labs.mock.formatMethodCall_ = function(methodName, opt_args) {
   'use strict';
   opt_args = opt_args || [];
-  opt_args = goog.array.map(opt_args, function(arg) {
+  opt_args = opt_args.map(function(arg) {
     'use strict';
     if (typeof arg === 'function') {
       const funcName = goog.labs.mock.getFunctionName_(arg);
@@ -192,11 +192,9 @@ goog.labs.mock.formatMethodCall_ = function(methodName, opt_args) {
       const isObjectWithClass = goog.isObject(arg) &&
           typeof arg !== 'function' && !Array.isArray(arg) &&
           arg.constructor != Object;
-
       if (isObjectWithClass) {
         return arg.toString();
       }
-
       return goog.labs.mock.formatValue_(arg);
     }
   });
@@ -219,7 +217,7 @@ goog.labs.mock.uid_ = [];
  */
 goog.labs.mock.getUid = function(obj) {
   'use strict';
-  let index = goog.array.indexOf(goog.labs.mock.uid_, obj);
+  let index = goog.labs.mock.uid_.indexOf(obj);
   if (index == -1) {
     index = goog.labs.mock.uid_.length;
     goog.labs.mock.uid_.push(obj);
@@ -379,7 +377,7 @@ goog.labs.mock.PROTOTYPE_FIELDS_ = [
 goog.labs.mock.VerificationError.getVerificationErrorMsg_ = function(
     recordedCalls, methodName, verificationMode, args) {
   'use strict';
-  recordedCalls = goog.array.filter(recordedCalls, function(binding) {
+  recordedCalls = recordedCalls.filter(function(binding) {
     'use strict';
     return binding.getMethodName() == methodName;
   });
@@ -530,7 +528,7 @@ goog.labs.mock.MockManager_.prototype.setTimeoutMode_ = function(timeoutMode) {
 goog.labs.mock.MockManager_.prototype.handleMockCall_ = function(
     methodName, var_args) {
   'use strict';
-  const args = goog.array.slice(arguments, 1);
+  const args = Array.prototype.slice.call(arguments, 1);
   return new goog.labs.mock.StubBinderImpl_(this, methodName, args);
 };
 
@@ -583,7 +581,7 @@ goog.labs.mock.MockManager_.prototype.addBinding = function(
 goog.labs.mock.MockManager_.prototype.getNextBinding = function(
     methodName, args) {
   'use strict';
-  const bindings = goog.array.find(this.methodBindings, function(bindingArray) {
+  const bindings = this.methodBindings.find(function(bindingArray) {
     'use strict';
     return bindingArray[0].matches(
         methodName, args, false /* isVerification */);
@@ -626,7 +624,7 @@ goog.labs.mock.MockManager_.prototype.getExecutor = function(methodName, args) {
 goog.labs.mock.MockManager_.prototype.executeStub = function(
     methodName, var_args) {
   'use strict';
-  const args = goog.array.slice(arguments, 1);
+  const args = Array.prototype.slice.call(arguments, 1);
 
   const callRecord = this.recordCall_(methodName, args);
 
@@ -671,11 +669,14 @@ goog.labs.mock.MockManager_.prototype.recordCall_ = function(methodName, args) {
 goog.labs.mock.MockManager_.prototype.verifyInvocation = function(
     methodName, var_args) {
   'use strict';
-  const args = goog.array.slice(arguments, 1);
-  const count = goog.array.count(this.callRecords_, function(binding) {
-    'use strict';
-    return binding.matches(methodName, args, true /* isVerification */);
-  });
+  const args = Array.prototype.slice.call(arguments, 1);
+  const count =
+      this.callRecords_
+          .filter(function(binding) {
+            'use strict';
+            return binding.matches(methodName, args, true /* isVerification */);
+          })
+          .length;
 
   if (!this.verificationMode_.verify(count)) {
     throw new goog.labs.mock.VerificationError(
@@ -693,9 +694,12 @@ goog.labs.mock.MockManager_.prototype.verifyInvocation = function(
  */
 goog.labs.mock.MockManager_.prototype.waitForCall = function(
     methodName, ...args) {
-  let count = goog.array.count(this.callRecords_, function(binding) {
-    return binding.matches(methodName, args, true /* isVerification */);
-  });
+  let count =
+      this.callRecords_
+          .filter(function(binding) {
+            return binding.matches(methodName, args, true /* isVerification */);
+          })
+          .length;
 
   return new Promise((resolve, reject) => {
     // If the function has already been called, immediately resolve.
@@ -960,7 +964,7 @@ goog.labs.mock.MockFunctionManager_.prototype.useMockedFunctionName_ = function(
   // Avoid using 'this' because this function may be called with 'new'.
   return function(var_args) {
     'use strict';
-    const args = goog.array.clone(arguments);
+    const args = Array.prototype.slice.call(arguments);
     const name = '#mockFor<' + mockFunctionManager.name_ + '>';
     goog.array.insertAt(args, name, 0);
     return nextFunc.apply(mockFunctionManager, args);

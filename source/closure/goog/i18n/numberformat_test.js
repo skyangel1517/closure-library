@@ -6,7 +6,7 @@
 
 /**
  * @fileoverview
- * @suppress {missingRequire}
+ * @suppress {missingRequire} Swapping using fully qualified name
  */
 goog.module('goog.i18n.NumberFormatTest');
 goog.setTestOnly();
@@ -81,6 +81,7 @@ testSuite({
     expectedFailures = new ExpectedFailures();
   },
 
+  /** @suppress {const} See go/const-js-library-faq */
   setUp() {
     // Always switch back to English on startup.
     goog.i18n.NumberFormatSymbols = NumberFormatSymbols_en;
@@ -132,9 +133,9 @@ testSuite({
 
     fmt = new NumberFormat(NumberFormat.Format.COMPACT_SHORT);
     str = fmt.format(Infinity);
-    assertEquals('\u221eT', str);
+    assertEquals('\u221e', str);
     str = fmt.format(-Infinity);
-    assertEquals('-\u221eT', str);
+    assertEquals('-\u221e', str);
   },
 
   testStandardFormat() {

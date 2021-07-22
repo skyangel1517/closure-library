@@ -185,7 +185,7 @@ goog.dom.ControlRange.prototype.getEndNode = function() {
   'use strict';
   var sorted = this.getSortedElements();
   var startsLast = /** @type {Node} */ (goog.array.peek(sorted));
-  return /** @type {Node} */ (goog.array.find(sorted, function(el) {
+  return /** @type {Node} */ (sorted.find(function(el) {
     'use strict';
     return goog.dom.contains(el, startsLast);
   }));
@@ -242,7 +242,7 @@ goog.dom.ControlRange.prototype.isRangeInDocument = function() {
   var returnValue = false;
 
   try {
-    returnValue = goog.array.every(this.getElements(), function(element) {
+    returnValue = this.getElements().every(function(element) {
       'use strict';
       // On IE, this throws an exception when the range is detached.
       return goog.userAgent.IE ?
@@ -277,8 +277,7 @@ goog.dom.ControlRange.prototype.getText = function() {
 /** @override */
 goog.dom.ControlRange.prototype.getHtmlFragment = function() {
   'use strict';
-  return goog.array.map(this.getSortedElements(), goog.dom.getOuterHtml)
-      .join('');
+  return this.getSortedElements().map(goog.dom.getOuterHtml).join('');
 };
 
 
@@ -322,7 +321,7 @@ goog.dom.ControlRange.prototype.removeContents = function() {
     for (var i = 0, len = this.range_.length; i < len; i++) {
       nodes.push(this.range_.item(i));
     }
-    goog.array.forEach(nodes, goog.dom.removeNode);
+    nodes.forEach(goog.dom.removeNode);
 
     this.collapse(false);
   }
@@ -506,7 +505,7 @@ goog.dom.ControlRangeIterator.prototype.isLast = function() {
  * @return {Node} The node at the next position.
  * @override
  */
-goog.dom.ControlRangeIterator.prototype.next = function() {
+goog.dom.ControlRangeIterator.prototype.nextValueOrThrow = function() {
   'use strict';
   // Iterate over each element in the range, and all of its children.
   if (this.isLast()) {
@@ -521,6 +520,13 @@ goog.dom.ControlRangeIterator.prototype.next = function() {
   // Call the super function.
   return goog.dom.ControlRangeIterator.superClass_.next.call(this);
 };
+/**
+ * TODO(user): Please do not remove - this will be cleaned up centrally.
+ * @override @see {!goog.iter.Iterator}
+ */
+goog.dom.ControlRangeIterator.prototype.next =
+    goog.dom.ControlRangeIterator.prototype.nextValueOrThrow;
+
 
 
 /** @override */

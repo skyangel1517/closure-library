@@ -1051,7 +1051,8 @@ goog.dom.createTable_ = function(doc, rows, columns, fillWithNbsp) {
  */
 goog.dom.constHtmlToNode = function(var_args) {
   'use strict';
-  var stringArray = goog.array.map(arguments, goog.string.Const.unwrap);
+  var stringArray =
+      Array.prototype.map.call(arguments, goog.string.Const.unwrap);
   var safeHtml =
       goog.html.uncheckedconversions
           .safeHtmlFromStringKnownToSatisfyTypeContract(
@@ -1403,7 +1404,7 @@ goog.dom.getChildren = function(element) {
     return element.children;
   }
   // Fall back to manually filtering the element's child nodes.
-  return goog.array.filter(element.childNodes, function(node) {
+  return Array.prototype.filter.call(element.childNodes, function(node) {
     'use strict';
     return node.nodeType == goog.dom.NodeType.ELEMENT;
   });

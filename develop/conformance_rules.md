@@ -82,7 +82,7 @@ Summing it up:
 
 *   Use `goog.dom` functions with `goog.dom.TagName` instances.
 *   Use `getElementByTagNameAndClass`.
-*   Use `goog.dom.asserts` if there's no better API.
+*   Use `goog.asserts.dom` if there's no better API.
 *   Avoid type-casting as there's no check whether you actually cast a correct
     type. For example, type-casting `HTMLScriptElement` as an `Element` can lead
     it to being incorrectly treated as an `HTMLImageElement` elsewhere.
@@ -276,11 +276,6 @@ and therefore disallowed.
 Raw `postMessage()` does not restrict target and sender origins by default. This
 can cause security vulnerabilities.
 
-
-{: #expose}
-### @expose 
-
-@expose has non-obvious global side-effects that can cause errors.
 
 {: #globalVars}
 ### Global declarations 

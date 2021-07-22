@@ -249,6 +249,22 @@ goog.LOCALE = goog.define('goog.LOCALE', 'en');  // default to en
 
 
 /**
+ * This method is intended to be used for bookkeeping purposes.  We would
+ * like to distinguish uses of goog.LOCALE used for code stripping purposes
+ * and uses of goog.LOCALE for other uses (such as URL parameters).
+ *
+ * This allows us to ban direct uses of goog.LOCALE and to ensure that all
+ * code has been transformed to our new localization build scheme.
+ *
+ * @return {string}
+ *
+ */
+goog.getLocale = function() {
+  return goog.LOCALE;
+};
+
+
+/**
  * @define {boolean} Whether this code is running on trusted sites.
  *
  * On untrusted sites, several native functions can be defined or overridden by
@@ -345,24 +361,6 @@ goog.constructNamespace_ = function(name, object, overwriteImplicit) {
 
 
 /**
- * Returns CSP nonce, if set for any script tag.
- * @param {?Window=} opt_window The window context used to retrieve the nonce.
- *     Defaults to global context.
- * @return {string} CSP nonce or empty string if no nonce is present.
- * @deprecated Use goog.dom.safe.getScriptNonce.
- */
-goog.getScriptNonce = function(opt_window) {
-  if (opt_window && opt_window != goog.global) {
-    return goog.getScriptNonce_(opt_window.document);
-  }
-  if (goog.cspNonce_ === null) {
-    goog.cspNonce_ = goog.getScriptNonce_(goog.global.document);
-  }
-  return goog.cspNonce_;
-};
-
-
-/**
  * According to the CSP3 spec a nonce must be a valid base64 string.
  * @see https://www.w3.org/TR/CSP3/#grammardef-base64-value
  * @private @const
@@ -371,18 +369,14 @@ goog.NONCE_PATTERN_ = /^[\w+/_-]+[=]{0,2}$/;
 
 
 /**
- * @private {?string}
- */
-goog.cspNonce_ = null;
-
-
-/**
  * Returns CSP nonce, if set for any script tag.
- * @param {!Document} doc
+ * @param {?Window=} opt_window The window context used to retrieve the nonce.
+ *     Defaults to global context.
  * @return {string} CSP nonce or empty string if no nonce is present.
  * @private
  */
-goog.getScriptNonce_ = function(doc) {
+goog.getScriptNonce_ = function(opt_window) {
+  var doc = (opt_window || goog.global).document;
   var script = doc.querySelector && doc.querySelector('script[nonce]');
   if (script) {
     // Try to get the nonce from the IDL property first, because browsers that
@@ -1431,6 +1425,11 @@ goog.cloneObject = function(obj) {
     if (typeof obj.clone === 'function') {
       return obj.clone();
     }
+    if (typeof Map !== 'undefined' && obj instanceof Map) {
+      return new Map(obj);
+    } else if (typeof Set !== 'undefined' && obj instanceof Set) {
+      return new Set(obj);
+    }
     var clone = type == 'array' ? [] : {};
     for (var key in obj) {
       clone[key] = goog.cloneObject(obj[key]);
@@ -2373,7 +2372,7 @@ if (!COMPILED && goog.DEPENDENCIES_ENABLED) {
     });
     // optional catch binding, unescaped unicode paragraph separator in strings
     addNewerLanguageTranspilationCheck('es_2019', function() {
-      return evalCheck('let r;try{throw 0}catch{r="\u2029"};r');
+      return evalCheck('let r;try{r="\u2029"}catch{};r');
     });
     // optional chaining, nullish coalescing
     // untested/unsupported: bigint, import meta
@@ -3127,7 +3126,7 @@ if (!COMPILED && goog.DEPENDENCIES_ENABLED) {
       }
     }
 
-    var nonce = goog.getScriptNonce();
+    var nonce = goog.getScriptNonce_();
     if (!goog.ENABLE_CHROME_APP_SAFE_SCRIPT_LOADING &&
         goog.isDocumentLoading_()) {
       var key;
@@ -3253,7 +3252,7 @@ if (!COMPILED && goog.DEPENDENCIES_ENABLED) {
     // appending?
     function write(src, contents) {
       var nonceAttr = '';
-      var nonce = goog.getScriptNonce();
+      var nonce = goog.getScriptNonce_();
       if (nonce) {
         nonceAttr = ' nonce="' + nonce + '"';
       }
@@ -3287,7 +3286,7 @@ if (!COMPILED && goog.DEPENDENCIES_ENABLED) {
 
       // If CSP nonces are used, propagate them to dynamically created scripts.
       // This is necessary to allow nonce-based CSPs without 'strict-dynamic'.
-      var nonce = goog.getScriptNonce();
+      var nonce = goog.getScriptNonce_();
       if (nonce) {
         scriptEl.nonce = nonce;
       }
@@ -3488,7 +3487,7 @@ if (!COMPILED && goog.DEPENDENCIES_ENABLED) {
         load();
       });
 
-      var nonce = goog.getScriptNonce();
+      var nonce = goog.getScriptNonce_();
       var nonceAttr = nonce ? ' nonce="' + nonce + '"' : '';
       var script = '<script' + nonceAttr + '>' +
           goog.protectScriptTag_('goog.Dependency.callback_("' + key + '");') +

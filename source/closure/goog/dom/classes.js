@@ -60,7 +60,7 @@ goog.dom.classes.get = function(element) {
 goog.dom.classes.add = function(element, var_args) {
   'use strict';
   var classes = goog.dom.classes.get(element);
-  var args = goog.array.slice(arguments, 1);
+  var args = Array.prototype.slice.call(arguments, 1);
   var expectedCount = classes.length + args.length;
   goog.dom.classes.add_(classes, args);
   goog.dom.classes.set(element, classes.join(' '));
@@ -80,7 +80,7 @@ goog.dom.classes.add = function(element, var_args) {
 goog.dom.classes.remove = function(element, var_args) {
   'use strict';
   var classes = goog.dom.classes.get(element);
-  var args = goog.array.slice(arguments, 1);
+  var args = Array.prototype.slice.call(arguments, 1);
   var newClasses = goog.dom.classes.getDifference_(classes, args);
   goog.dom.classes.set(element, newClasses.join(' '));
   return newClasses.length == classes.length - args.length;
@@ -117,7 +117,7 @@ goog.dom.classes.add_ = function(classes, args) {
  */
 goog.dom.classes.getDifference_ = function(arr1, arr2) {
   'use strict';
-  return goog.array.filter(arr1, function(item) {
+  return arr1.filter(function(item) {
     'use strict';
     return !goog.array.contains(arr2, item);
   });
@@ -140,7 +140,7 @@ goog.dom.classes.swap = function(element, fromClass, toClass) {
   var removed = false;
   for (var i = 0; i < classes.length; i++) {
     if (classes[i] == fromClass) {
-      goog.array.splice(classes, i--, 1);
+      classes.splice(i--, 1);
       removed = true;
     }
   }

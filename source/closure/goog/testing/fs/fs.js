@@ -14,7 +14,6 @@ goog.setTestOnly('goog.testing.fs');
 goog.provide('goog.testing.fs');
 
 goog.require('goog.Timer');
-goog.require('goog.array');
 goog.require('goog.async.Deferred');
 /** @suppress {extraRequire} used in mocking */
 goog.require('goog.fs');
@@ -111,7 +110,8 @@ goog.testing.fs.isObjectUrlGranted = function(blob) {
  */
 goog.testing.fs.getBlob = function(var_args) {
   'use strict';
-  return new goog.testing.fs.Blob(goog.array.map(arguments, String).join(''));
+  return new goog.testing.fs.Blob(
+      Array.prototype.map.call(arguments, String).join(''));
 };
 
 
@@ -128,8 +128,7 @@ goog.testing.fs.getBlob = function(var_args) {
  */
 goog.testing.fs.getBlobWithProperties = function(parts, opt_type, opt_endings) {
   'use strict';
-  return new goog.testing.fs.Blob(
-      goog.array.map(parts, String).join(''), opt_type);
+  return new goog.testing.fs.Blob(parts.map(String).join(''), opt_type);
 };
 
 

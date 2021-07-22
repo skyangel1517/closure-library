@@ -19,11 +19,21 @@ class ArrayIterator extends IterIterator {
     this.current_ = 0;
   }
 
-  next() {
+  /** @override */
+  nextValueOrThrow() {
     if (this.current_ >= this.array_.length) {
       throw StopIteration;
     }
     return this.array_[this.current_++];
+  }
+
+  /**
+   * TODO(user): Please do not remove - this will be cleaned up
+   * centrally.
+   * @override @see {!goog.iter.Iterator}
+   */
+  next() {
+    return ArrayIterator.prototype.nextValueOrThrow.call(this);
   }
 }
 
@@ -374,6 +384,9 @@ testSuite({
 
     const iterLikeObject = {
       next: function() {
+        throw StopIteration;
+      },
+      nextValueOrThrow() {
         throw StopIteration;
       }
     };
@@ -916,5 +929,44 @@ testSuite({
       iter.next();
     });
     assertEquals(StopIteration, ex);
+  },
+
+  testNoInfiniteRecursionWhenMigratingToNextValueOrThrow() {
+    /**
+     * This example class demonstrates the pattern used when migrating
+     * definitions of a goog.iter.Iterator from defining #next to defining
+     * #nextValueOrThrow.
+     * In particular, the super call is problematic when it calls back into
+     * `next` via `this`: this causes infinite recursion to occur.
+     * @extends {IterIterator}
+     * @template VALUE
+     */
+    class ExtendedIterator extends IterIterator {
+      /**
+       * Returns the next value of the iteration.  This will throw the object
+       * {@see goog.iter.StopIteration} when the iteration passes the end.
+       * @return {VALUE} Any object or value
+       */
+      nextValueOrThrow() {
+        return super.next();
+      }
+
+      /**
+       * Returns the next value of the iteration.  This will throw the object
+       * {@see goog.iter.StopIteration} when the iteration passes the end.
+       * @return {VALUE} Any object or value.
+       * @deprecated To ease migration to the ES6 Iteration Protocol, this
+       *     method is now called `nextValueOrThrow`.
+       */
+      next() {
+        return ExtendedIterator.prototype.nextValueOrThrow.call(this);
+      }
+    }
+
+    // Without fixing base GoogIterator's next method to explicitly call the
+    // base implementation's nextValueOrThrow definition (instead of
+    // `this.nextValueOrThrow()`), attempting to iterate over this iterator will
+    // lead to infinite recursion.
+    googIter.forEach(new ExtendedIterator(), () => {});
   },
 });

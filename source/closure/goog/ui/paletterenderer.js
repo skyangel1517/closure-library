@@ -6,7 +6,6 @@
 
 /**
  * @fileoverview Renderer for {@link goog.ui.Palette}s.
- * @suppress {missingRequire} TODO(user): this shouldn't be needed
  */
 
 goog.provide('goog.ui.PaletteRenderer');
@@ -101,7 +100,6 @@ goog.ui.PaletteRenderer.prototype.createDom = function(palette) {
       this.createGrid(
           /** @type {Array<Node>} */ (palette.getContent()), palette.getSize(),
           palette.getDomHelper()));
-  goog.a11y.aria.setRole(element, goog.a11y.aria.Role.GRID);
   // It's safe to store grid width here since `goog.ui.Palette#setSize` cannot
   // be called after createDom.
   goog.dom.dataset.set(
@@ -151,6 +149,7 @@ goog.ui.PaletteRenderer.prototype.createTable = function(rows, dom) {
       dom.createDom(
           goog.dom.TagName.TBODY, goog.getCssName(this.getCssClass(), 'body'),
           rows));
+  goog.a11y.aria.setRole(table, goog.a11y.aria.Role.GRID);
   table.cellSpacing = '0';
   table.cellPadding = '0';
   return table;
@@ -275,7 +274,7 @@ goog.ui.PaletteRenderer.prototype.setContent = function(element, content) {
         element)[0];
     if (tbody) {
       var index = 0;
-      goog.array.forEach(tbody.rows, function(row) {
+      Array.prototype.forEach.call(tbody.rows, function(row) {
         'use strict';
         goog.array.forEach(row.cells, function(cell) {
           'use strict';

@@ -26,7 +26,6 @@ const googDom = goog.require('goog.dom');
 const googObject = goog.require('goog.object');
 const googStyle = goog.require('goog.style');
 const jsunit = goog.require('goog.testing.jsunit');
-const safe = goog.require('goog.dom.safe');
 const testSuite = goog.require('goog.testing.testSuite');
 const testing = goog.require('goog.html.testing');
 const userAgent = goog.require('goog.userAgent');
@@ -118,11 +117,6 @@ testSuite({
     userAgentTestUtil.reinitializeUserAgent();
     mockUserAgent = new MockUserAgent();
     mockUserAgent.install();
-
-    if (!safe.getStyleNonce()) {
-      /** @suppress {visibility} suppression added to enable type checking */
-      safe.cspStyleNonce_ = 'thisIsANonce';
-    }
   },
 
   tearDown() {
@@ -138,12 +132,6 @@ testSuite({
     // Prevent multiple vendor prefixed mock elements from poisoning the cache.
     /** @suppress {visibility} suppression added to enable type checking */
     googStyle.styleNameCache_ = {};
-
-    /**
-     * @suppress {visibility,checkTypes} suppression added to enable type
-     * checking
-     */
-    goog.cspNonce_ = undefined;
   },
 
   testSetStyle() {
@@ -1025,8 +1013,7 @@ testSuite({
 
     const styles = document.head.querySelectorAll('style[nonce]');
     assert(styles.length > 1);
-    assertEquals(
-        safe.cspStyleNonce_, styles[styles.length - 1].getAttribute('nonce'));
+    assertEquals('NONCE', styles[styles.length - 1].getAttribute('nonce'));
 
     googStyle.uninstallStyles(result);
   },
@@ -1081,7 +1068,7 @@ testSuite({
     assertFalse(googStyle.isUnselectable(el));
 
     function assertDescendantsUnselectable(unselectable) {
-      googArray.forEach(el.getElementsByTagName('*'), (descendant) => {
+      Array.prototype.forEach.call(el.getElementsByTagName('*'), descendant => {
         // Skip MathML or any other elements that do not have a style property.
         if (descendant.style) {
           assertEquals(unselectable, googStyle.isUnselectable(descendant));
@@ -2315,11 +2302,6 @@ testSuite({
   },
 
   testGetViewportPageOffset() {
-    expectedFailures.expectFailureFor(
-        userAgent.IE && !userAgent.isVersionOrHigher(10),
-        'Test has been flaky for ie9-win7 and ie8-winxp image. Disabling. ' +
-            'See b/22873770.');
-
     try {
       const testViewport = googDom.getElement('test-viewport');
       testViewport.style.height = '5000px';

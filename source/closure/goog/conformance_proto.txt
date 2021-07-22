@@ -23,13 +23,6 @@ requirement: {
 }
 
 requirement: {
-  rule_id: 'closure:expose'
-  type: CUSTOM
-  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanExpose'
-  error_message: '@expose is not allowed. See https://google.github.io/closure-library/develop/conformance_rules.html#expose'
-}
-
-requirement: {
   rule_id: 'closure:throwOfNonErrorTypes'
   type: CUSTOM
   java_class: 'com.google.javascript.jscomp.ConformanceRules$BanThrowOfNonErrorTypes'
@@ -360,6 +353,7 @@ requirement: {
   rule_id: 'closure:trustedResourceUrlProperties'
   type: BANNED_PROPERTY_NON_CONSTANT_WRITE
   error_message: 'Assignment to property requires a TrustedResourceUrl via goog.dom.safe. See https://google.github.io/closure-library/develop/conformance_rules.html#trustedResourceUrl'
+  report_loose_type_violations: false
 
   # Properties which can only be assigned to from a TrustedResourceUrl.
   value: 'HTMLElement.prototype.manifest'
@@ -372,7 +366,6 @@ requirement: {
   # there are a bunch of dangerous properties.
   value: 'HTMLObjectElement.prototype.data'
   value: 'HTMLScriptElement.prototype.src'
-  value: 'HTMLTrackElement.prototype.src'
   # TODO(mlourenco): Ban other dangerous properties (archive, classid, etc).
 
   # Closure's debug loader.
@@ -411,70 +404,6 @@ requirement: {
 
   # TODO(jakubvrana): Ban this.
   allowlist_regexp: '.+/closure/goog/ui/abstractspellchecker.js'
-}
-
-requirement: {
-  rule_id: 'closure:setProperties'
-  type: BANNED_CODE_PATTERN
-  error_message: 'Assigning a value to a dangerous property via setProperties is forbidden. See https://google.github.io/closure-library/develop/conformance_rules.html#createDom'
-
-  value:
-      '/**\n'
-      ' * @param {!HTMLEmbedElement|!HTMLFrameElement|!HTMLIFrameElement|!HTMLScriptElement|!HTMLTrackElement} element\n'
-      ' * @param {{src: ?}} attrs\n'
-      ' */\n'
-      'function template(element, attrs) {'
-      '  goog.dom.setProperties(element, attrs);'
-      '}'
-  value:
-      '/**\n'
-      ' * @param {!HTMLObjectElement} element\n'
-      ' * @param {{data: ?}} attrs\n'
-      ' */\n'
-      'function template(element, attrs) {\n'
-      '  goog.dom.setProperties(element, attrs);\n'
-      '}'
-  value:
-      '/**\n'
-      ' * @param {!goog.dom.DomHelper} dom\n'
-      ' * @param {!HTMLEmbedElement|!HTMLFrameElement|!HTMLIFrameElement|!HTMLScriptElement|!HTMLTrackElement} element\n'
-      ' * @param {{src: ?}} attrs\n'
-      ' */\n'
-      'function template(dom, element, attrs) {\n'
-      '  dom.setProperties(element, attrs);\n'
-      '}'
-  value:
-      '/**\n'
-      ' * @param {!goog.dom.DomHelper} dom\n'
-      ' * @param {!HTMLObjectElement} element\n'
-      ' * @param {{data: ?}} attrs\n'
-      ' */\n'
-      'function template(dom, element, attrs) {\n'
-      '  dom.setProperties(element, attrs);\n'
-      '}'
-}
-
-requirement: {
-  rule_id: 'closure:setAttribute'
-  type: BANNED_CODE_PATTERN
-  error_message: 'Assigning a value to a dangerous property via setAttribute is forbidden. See https://google.github.io/closure-library/develop/conformance_rules.html#createDom'
-
-  value:
-      '/**\n'
-      ' * @param {!HTMLEmbedElement|!HTMLFrameElement|!HTMLIFrameElement|!HTMLScriptElement|!HTMLTrackElement} element\n'
-      ' * @param {?} value\n'
-      ' */\n'
-      'function template(element, value) {'
-      '  element.setAttribute(\'src\', value);'
-      '}'
-  value:
-      '/**\n'
-      ' * @param {!HTMLObjectElement} element\n'
-      ' * @param {?} value\n'
-      ' */\n'
-      'function template(element, value) {\n'
-      '  element.setAttribute(\'data\', value);\n'
-      '}'
 }
 
 #### Closure functions which use goog.html.legacyconversions ####

@@ -678,13 +678,15 @@ testSuite({
 
   /** @suppress {visibility} suppression added to enable type checking */
   testParseRunTests() {
-    assertNull(TestCase.parseRunTests_(''));
-    assertNull(TestCase.parseRunTests_('?runTests='));
+    assertNull(TestCase.parseRunTests_('file://hello.html'));
+    assertNull(TestCase.parseRunTests_('https://example.com?runTests='));
     assertObjectEquals(
-        {'testOne': true}, TestCase.parseRunTests_('?runTests=testOne'));
+        {'testOne': true},
+        TestCase.parseRunTests_('https://example.com?runTests=testOne'));
     assertObjectEquals(
         {'testOne': true, 'testTwo': true},
-        TestCase.parseRunTests_('?foo=bar&runTests=testOne,testTwo'));
+        TestCase.parseRunTests_(
+            'https://example.com?foo=bar&runTests=testOne,testTwo'));
     assertObjectEquals(
         {
           '1': true,
@@ -693,7 +695,8 @@ testSuite({
           'testShouting': true,
           'TESTSHOUTING': true,
         },
-        TestCase.parseRunTests_('?RUNTESTS=testShouting,TESTSHOUTING,1,2,3'));
+        TestCase.parseRunTests_(
+            'https://example.com?RUNTESTS=testShouting,TESTSHOUTING,1,2,3'));
   },
 
   /**
@@ -1126,7 +1129,7 @@ testSuite({
       },
       testNestedIgnoreTests: {
         shouldRunTests() {
-          event('shouldRunTests')();
+          event('testNestedIgnoreTests_ShouldRunTests')();
           return false;
         },
 
@@ -1161,11 +1164,18 @@ testSuite({
           testC: event('testNestedSuite_SuperNestedSuite_C'),
           tearDown: event('tearDown4'),
         },
+        testSuperNestedIgnoreTests: {
+          shouldRunTests() {
+            event('testNestedSuite_SuperNestedIgnoreTests_ShouldRunTests')();
+            return false;
+          },
+          testShouldNotRun: event('SHOULD NEVER HAPPEN SUPER NESTED'),
+        },
         tearDown: event('tearDown3'),
       },
       tearDown: event('tearDown1'),
     });
-    assertEquals(11, testCase.getCount());
+    assertEquals(12, testCase.getCount());
     const tests = testCase.getTests();
     const names = [];
     for (let i = 0; i < tests.length; i++) {
@@ -1184,6 +1194,7 @@ testSuite({
           'testNestedSuite_A',
           'testNestedSuite_B',
           'testNestedSuite_SuperNestedSuite_C',
+          'testNestedSuite_SuperNestedIgnoreTests_ShouldNotRun',
         ],
         names);
     await testCase.runTestsReturningPromise();
@@ -1197,7 +1208,7 @@ testSuite({
           'testNested',
           'tearDown2',
           'tearDown1',
-          'shouldRunTests',
+          'testNestedIgnoreTests_ShouldRunTests',
           'throw shouldRunTests',
           'setUp1',
           'setUp3',
@@ -1216,6 +1227,7 @@ testSuite({
           'tearDown4',
           'tearDown3',
           'tearDown1',
+          'testNestedSuite_SuperNestedIgnoreTests_ShouldRunTests',
         ],
         events);
   },

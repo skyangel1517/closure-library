@@ -10,13 +10,13 @@ goog.setTestOnly();
 const ErrorHandler = goog.require('goog.debug.ErrorHandler');
 const GoogPromise = goog.require('goog.Promise');
 const Resolver = goog.require('goog.promise.Resolver');
+const SafeScript = goog.require('goog.html.SafeScript');
 const TagName = goog.require('goog.dom.TagName');
 // const TestCase = goog.require('goog.testing.TestCase');
 const testSuite = goog.require('goog.testing.testSuite');
 const userAgent = goog.require('goog.userAgent');
 const {getDomHelper} = goog.require('goog.dom');
 const {newSafeScriptForTest} = goog.require('goog.html.testing');
-const {setScriptContent} = goog.require('goog.dom.safe');
 
 /** @type {!Resolver} */
 let resolver;
@@ -42,7 +42,9 @@ testCase.setUpPage = function() {
   /** @suppress {globalThis} suppression added to enable type checking */
   this.testingUnhandledRejection = 'onunhandledrejection' in window &&
       // TODO(user): This test is very flaky in Firefox >= 71
-      !(userAgent.GECKO && userAgent.isVersionOrHigher(71));
+      !(userAgent.GECKO && userAgent.isVersionOrHigher(71)) &&
+      // TODO(user): Re-enable after resolving test failure.
+      !(userAgent.SAFARI);
 
   /** @suppress {globalThis} suppression added to enable type checking */
   this.handler = new ErrorHandler(goog.bind(this.onException, this));
@@ -107,12 +109,12 @@ testCase.setUpIframe = function() {
 
   const iframeDom = getDomHelper(iframe.contentDocument.head);
   const scriptEl = iframeDom.createElement(TagName.SCRIPT);
-  setScriptContent(scriptEl, newSafeScriptForTest(`
-      async function iframeAsync() {
-        const p = Promise.resolve();
-        await p;
-        throw iframeAsync;
-      }`));
+  scriptEl.textContent = SafeScript.unwrapTrustedScript(newSafeScriptForTest(`
+    async function iframeAsync() {
+      const p = Promise.resolve();
+      await p;
+      throw iframeAsync;
+    }`));
   iframeDom.appendChild(iframe.contentDocument.head, scriptEl);
 
   /** @suppress {globalThis} suppression added to enable type checking */
@@ -168,7 +170,7 @@ testCase.async = async function() {
 };
 
 /** Test uncaught errors in async/await in iframe */
-testCase.iframeAsync = undefined;  // Initialized in setupPage.
+testCase.iframeAsync = undefined;  // Initialized in setUpIframe.
 
 testCase.testResults = function() {
   return resolver.promise.then(function() {

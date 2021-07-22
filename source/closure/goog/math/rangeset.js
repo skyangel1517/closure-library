@@ -341,11 +341,10 @@ goog.math.RangeSet.prototype.inverse = function(range) {
  */
 goog.math.RangeSet.prototype.coveredLength = function() {
   'use strict';
-  return /** @type {number} */ (
-      goog.array.reduce(this.ranges_, function(res, range) {
-        'use strict';
-        return res + range.end - range.start;
-      }, 0));
+  return /** @type {number} */ (this.ranges_.reduce(function(res, range) {
+    'use strict';
+    return res + range.end - range.start;
+  }, 0));
 };
 
 
@@ -394,13 +393,20 @@ goog.math.RangeSet.prototype.__iterator__ = function(opt_keys) {
   var list = this.ranges_;
 
   var iterator = new goog.iter.Iterator();
-  iterator.next = function() {
+  iterator.nextValueOrThrow = function() {
     'use strict';
     if (i >= list.length) {
       throw goog.iter.StopIteration;
     }
     return list[i++].clone();
   };
+  /**
+   * TODO(user): Please do not remove - this will be cleaned up
+   * centrally.
+   * @override @see {!goog.iter.Iterator}
+   */
+  iterator.next = iterator.nextValueOrThrow.bind(iterator);
+
 
   return iterator;
 };

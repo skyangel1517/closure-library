@@ -454,7 +454,9 @@ goog.module.ModuleManager.prototype.dispatchActiveIdleChangeIfNeeded_ =
 goog.module.ModuleManager.prototype.preloadModule = function(id, opt_timeout) {
   'use strict';
   var d = new goog.async.Deferred();
-  window.setTimeout(
+  // Call setTimeout on global object so that it can be called from within
+  // webworkers.
+  goog.global.setTimeout(
       goog.bind(this.addLoadModule_, this, id, d), opt_timeout || 0);
   return d;
 };
@@ -631,7 +633,7 @@ goog.module.ModuleManager.prototype.loadModulesOrEnqueue_ = function(ids) {
     this.initialModulesLoaded_.addCallback(
         goog.bind(this.loadModules_, this, ids));
   } else {
-    if (goog.array.isEmpty(this.loadingModuleIds_)) {
+    if (this.loadingModuleIds_.length === 0) {
       this.loadModules_(ids);
     } else {
       this.requestedModuleIdsQueue_.push(ids);
@@ -698,7 +700,7 @@ goog.module.ModuleManager.prototype.loadModules_ = function(
   // Dispatch an active/idle change if needed.
   this.dispatchActiveIdleChangeIfNeeded_();
 
-  if (goog.array.isEmpty(idsToLoadImmediately)) {
+  if (idsToLoadImmediately.length === 0) {
     // All requested modules and deps have been either loaded already or have
     // already been requested.
     return;
@@ -721,7 +723,9 @@ goog.module.ModuleManager.prototype.loadModules_ = function(
 
   var delay = this.getBackOff_();
   if (delay) {
-    window.setTimeout(loadFn, delay);
+    // Call setTimeout on global object so that it can be called from within
+    // webworkers.
+    goog.global.setTimeout(loadFn, delay);
   } else {
     loadFn();
   }
@@ -740,7 +744,7 @@ goog.module.ModuleManager.prototype.loadModules_ = function(
  */
 goog.module.ModuleManager.prototype.processModulesForLoad_ = function(ids) {
   'use strict';
-  ids = goog.array.filter(ids, (id) => {
+  ids = ids.filter(id => {
     let moduleInfo = this.moduleInfoMap[id];
     if (moduleInfo.isLoaded()) {
       goog.global.setTimeout(
@@ -766,7 +770,7 @@ goog.module.ModuleManager.prototype.processModulesForLoad_ = function(ids) {
 
     // Insert the requested module id and any other not-yet-loaded prereqs
     // that it has at the front of the queue.
-    var queuedModules = goog.array.map(idsWithDeps, function(id) {
+    var queuedModules = idsWithDeps.map(function(id) {
       'use strict';
       return [id];
     });
@@ -873,7 +877,7 @@ goog.module.ModuleManager.prototype.setLoaded = function() {
   // Remove the module id from the loading modules if it exists there.
   goog.array.remove(this.loadingModuleIds_, id);
 
-  if (goog.array.isEmpty(this.loadingModuleIds_)) {
+  if (this.loadingModuleIds_.length === 0) {
     // No more modules are currently being loaded (e.g. arriving later in the
     // same HTTP response), so proceed to load the next module in the queue.
     this.loadNextModules_();
@@ -923,7 +927,10 @@ goog.module.ModuleManager.prototype.execOnLoad = function(
     if (opt_preferSynchronous) {
       callbackWrapper.execute(this.getModuleContext());
     } else {
-      window.setTimeout(goog.bind(callbackWrapper.execute, callbackWrapper), 0);
+      // Call setTimeout on global object so that it can be called from within
+      // webworkers.
+      goog.global.setTimeout(
+          goog.bind(callbackWrapper.execute, callbackWrapper), 0);
     }
   } else if (this.isModuleLoading(moduleId)) {
     goog.log.fine(this.logger_, moduleId + ' module already loading');
@@ -1051,8 +1058,7 @@ goog.module.ModuleManager.prototype.handleLoadError_ = function(
   // started already.)
   this.requestedLoadingModuleIds_ = requestedLoadingModuleIds;
   // Pretend we never requested the failed modules.
-  goog.array.forEach(
-      requestedModuleIdsWithDeps,
+  requestedModuleIdsWithDeps.forEach(
       goog.partial(goog.array.remove, this.requestedModuleIds_), this);
 
   if (status == 401) {
@@ -1116,11 +1122,10 @@ goog.module.ModuleManager.prototype.requeueBatchOrDispatchFailure_ = function(
   // need to retry each one as a separate load. Otherwise, if there is only one
   // requested module, remove it and its dependencies from the queue.
   if (this.requestedLoadingModuleIds_.length > 1) {
-    var queuedModules =
-        goog.array.map(this.requestedLoadingModuleIds_, function(id) {
-          'use strict';
-          return [id];
-        });
+    var queuedModules = this.requestedLoadingModuleIds_.map(function(id) {
+      'use strict';
+      return [id];
+    });
     this.requestedModuleIdsQueue_ =
         queuedModules.concat(this.requestedModuleIdsQueue_);
   } else {
@@ -1144,8 +1149,7 @@ goog.module.ModuleManager.prototype.dispatchModuleLoadFailed_ = function(
   // they need to be removed from the queue.
   var idsToCancel = [];
   for (var i = 0; i < this.requestedModuleIdsQueue_.length; i++) {
-    var dependentModules = goog.array.filter(
-        this.requestedModuleIdsQueue_[i],
+    var dependentModules = this.requestedModuleIdsQueue_[i].filter(
         /**
          * Returns true if the requestedId has dependencies on the modules that
          * just failed to load.
@@ -1214,11 +1218,10 @@ goog.module.ModuleManager.prototype.loadNextModules_ = function() {
   'use strict';
   while (this.requestedModuleIdsQueue_.length) {
     // Remove modules that are already loaded.
-    var nextIds =
-        goog.array.filter(this.requestedModuleIdsQueue_.shift(), function(id) {
-          'use strict';
-          return !this.getModuleInfo(id).isLoaded();
-        }, this);
+    var nextIds = this.requestedModuleIdsQueue_.shift().filter(function(id) {
+      'use strict';
+      return !this.getModuleInfo(id).isLoaded();
+    }, this);
     if (nextIds.length > 0) {
       this.loadModules_(nextIds);
       return;
